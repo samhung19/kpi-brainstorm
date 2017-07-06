@@ -13,13 +13,6 @@ import numpy as np
 #
 #
 
-
-
-
-
-
-
-
 cap = cv2.VideoCapture('warm_startup.MOV')
 framecount = 0
 iteration = 0
@@ -29,20 +22,32 @@ capture = True
 while True and iteration <= 10:
     framecount += 1
     ret, frame = cap.read()
-    roi = frame[263, 308] #[row][column]
+    roi = frame[263, 308] #[row][column]  roi for the flash icon
+    phoneroi = frame[518,702] #roi for the camera icon
+
 
     cv2.rectangle(frame, (300,255), (316,271), (0, 255, 0), 2) #highlight region of interest
+    cv2.rectangle(frame, (694, 510), (710, 526), (0, 0, 255), 2) #highlight the phone icon
 
     cv2.namedWindow('frame', cv2.WINDOW_NORMAL) #this reframes the window so it fits screen
     cv2.imshow('frame', frame)
 
     b, g, r = roi #[row][column]
-    print("framecount: ", framecount, "r: ",r ,"g: ",g,"b: ", b)
+    #print("framecount: ", framecount, "r: ",r ,"g: ",g,"b: ", b)
 
-    if r>130 and g > 130 and b > 150 and r < 150 and g < 150 and b < 170:
+
+    b1, g1, r1 = phoneroi
+    print("framecount: ", framecount, "r: ",r1 ,"g: ",g1,"b: ", b1)
+
+    if r1 < 20 and g1 < 30 and b1 > 220:
+        capture = True # capture can only be true again if phone icon exists (check for blue in that area)
+
+    if r>130 and g > 130 and b > 150 and r < 150 and g < 150 and b < 170 and capture == True:
         print(framecount)
         cv2.imwrite('endingframe%i.jpg' %framecount, frame)
-        break
+        capture = False
+        iteration += 1
+
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
