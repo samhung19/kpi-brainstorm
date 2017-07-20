@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import userinput0 as user
-#contributors: Sam Hung & Josh Zeng
+#author: Sam Hung 
 # this program allows the user to capture the ending frames (snapshot and frame number)
 # when given an input file of startup latency (warm) from the Walleye device.
 
@@ -31,6 +31,7 @@ b_lag = 0
 r_lag = 0
 g_lag = 0
 
+f1 = open('output.txt', 'w')
 
 
 while True and iteration <= 10:
@@ -55,7 +56,7 @@ while True and iteration <= 10:
     #cv2.rectangle(frame, (754, 560), (770, 576), (0, 0, 255), 2) #highlight the phone icon
     roi = frame[user.yi, user.xi]
     phoneroi = frame[user.helperyi, user.helperxi]
-
+    flashhelper = frame[user.yi2, user.xi2]
 
 
 
@@ -79,34 +80,51 @@ while True and iteration <= 10:
     db_val = int(b) - int(b_lag)
     dg_val = int(g) - int(g_lag)
     dr_val = int(r) - int(r_lag)
-    if db_val > 120 and db_val < 200:
+    if db_val >= 115 and db_val < 200:
         db = True
-    if dr_val > 120 and dr_val < 200:
+    if dr_val >= 115 and dr_val < 200:
         dr = True
-    if dg_val > 120 and dg_val < 200:
+    if dg_val >= 115 and dg_val < 200:
         dg = True
 
     print("framecount: ", framecount, "r: ",r ,"g: ",g,"b: ", b)
     print(dr_val," ", dg_val, " ", db_val)
     b1, g1, r1 = phoneroi
     #print("framecount: ", framecount, "r: ",r1 ,"g: ",g1,"b: ", b1)
-
+    b2, g2, r2 = flashhelper
+    print("framecount: ", framecount, "r2: ", r2, "g2: ", g2, "b2: ", b2)
 
     if r1 < 20 and g1 < 30 and b1 > 220:
         capture = True # capture can only be true again if phone icon exists (check for blue in that area)
 
     #if (r>155 and g > 155 and b > 160 and r < 200 and g < 200 and b < 210 and capture == True) or (r > 100 and g > 105 and b > 110 and r < 120 and g < 120 and b < 130 and capture == True):
     if(db == True and dr == True and dg == True and capture == True):
-        print(framecount)
-        cv2.imwrite('endingframe%i.jpg' %framecount, frame)
-        capture = False
-        db = False
-        dg = False
-        dr = False
-        iteration += 1
 
+        r3 = r if r >= r2 else r2
+        r4 = r2 if r >= r2 else r
+        g3 = g if g >= g2 else g2
+        g4 = g2 if g >= g2 else g
+        b3 = b if b >= b2 else b2
+        b4 = b2 if b>= b2 else b
+
+        if(r3 - r4 < 90) and (g3 - g4 < 90) and (b3 - b4 < 90):
+            print(framecount)
+            cv2.imwrite('endingframe%i.jpg' %framecount, frame)
+            capture = False
+            db = False
+            dg = False
+            dr = False
+            iteration += 1
+            content1 = f"framecount: {framecount} r: {r}  g: {g}  b: {b}\n"
+            content2 = f"framecount: {framecount} r: {r2}  g: {g2}  b: {b2}\n"
+            content3 = f"dr: {dr_val}  dg: {dg_val}  db: {db_val}\n"
+            f1.write(content1)
+            f1.write(content2)
+            f1.write(content3)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+
+f1.close()
 cap.release()
 cv2.destroyAllWindows()
