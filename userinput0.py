@@ -1,37 +1,47 @@
 import cv2
 import numpy as np
 
-needsROI = True
-needsHelperROI = True
+step = 0
+
 def collectInput(event, x, y, flag, params):
     global xi, yi
     if event == cv2.EVENT_LBUTTONDOWN:
         print('xi: ' , x, ' yi: ', y )
         xi, yi = x, y
-        global needsROI
-        needsROI = False
-        #print(needsROI)
+        global step
+        step = 2
 
-def collectHelperInput(event, x, y, flag, params):
+def collectInput2(event, x, y, flag, params):
+    global xi2, yi2
+    if event == cv2.EVENT_LBUTTONDOWN:
+        print('xi2: ' , x, 'yi2: ', y )
+        xi2, yi2 = x, y
+        global step
+        step = 3
+
+def collectHelper(event, x, y, flag, params):
     global helperxi, helperyi
     if event == cv2.EVENT_LBUTTONDOWN:
         print('helperxi: ' , x, ' helperyi: ', y )
         helperxi, helperyi = x, y
-        global needsHelperROI
-        needsHelperROI = False
-        #print(needsHelperROI)
+        global step
+        step = 1
 
-cap0 = cv2.VideoCapture('capturelatency0630.MOV')
+
+
+cap0 = cv2.VideoCapture('warm_startup.MOV')
 
 while True:
     ret, frame = cap0.read()
     cv2.namedWindow('frame', cv2.WINDOW_NORMAL) #this reframes the window so it fits screen
     cv2.imshow('frame', frame)
-    if needsROI == True and needsHelperROI == True:
+    if step == 0:
+        cv2.setMouseCallback('frame', collectHelper)
+    elif step == 1:
         cv2.setMouseCallback('frame', collectInput)
-    elif needsROI == False and needsHelperROI == True:
-        cv2.setMouseCallback('frame', collectHelperInput)
-    elif needsROI == False and needsHelperROI == False:
+    elif step == 2:
+        cv2.setMouseCallback('frame', collectInput2)
+    elif step >= 3:
         break
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
